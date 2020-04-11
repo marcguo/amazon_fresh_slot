@@ -3,13 +3,21 @@ from selenium import webdriver
 from pyvirtualdisplay import Display
 # Sweet credentials :)
 import credentials
-
+# For sending text mails using SMTP.
 import smtplib
 
+# Constants.
 AVAILABLE_MESSAGE = 'Delivery slot available!'
 UNAVAILABLE_MESSAGE = 'Delivery temporarily sold out'
 
 def send_text(content):
+    '''
+    Sends a text mail to the user with a passed in message.
+
+    @type  content string
+    @param content Some text content to send to the user.
+    '''
+
     # Establish a secure session with gmail's outgoing SMTP server.
     server = smtplib.SMTP("smtp.gmail.com", 587)
     server.starttls()
@@ -19,6 +27,16 @@ def send_text(content):
     server.sendmail(credentials.TEXT_SENDER, credentials.TEXT_RECEIVER, content)
 
 def get_slot_info():
+    '''
+    Gets the available slot status banner from the main page of the Amazon
+    fresh website. You need to log in with your account in order to use this
+    method. You can create a "credentials.py" file and set up your credentials
+    there.
+
+    @rtype  string
+    @return The banner info string obtained from the Amazon Fresh main page.
+    '''
+
     display = Display(visible=0, size=(800, 600))
     display.start()
 
@@ -41,6 +59,16 @@ def get_slot_info():
     return banner_str
 
 def form_result(slot_info):
+    '''
+    Forms the output message containing the available/unavailable information.
+
+    @type  slot_info
+    @param The banner slot info to parse.
+
+    @rtype  string
+    @return A message indicating whether slots are available or not.
+    '''
+
     if UNAVAILABLE_MESSAGE in slot_info:
         message = UNAVAILABLE_MESSAGE
     else:
@@ -50,12 +78,13 @@ def form_result(slot_info):
 
     print('The original message is: {}'.format(slot_info))
 
-    return message, slot_info
+    return message
 
+# Get the slot info from the Amazon Fresh site.
 slot_info = get_slot_info()
-
-result, original_message = form_result(slot_info)
-
+# Parse the data obtained from the Amazon Fresh site.
+result = form_result(slot_info)
+# If there is an available slot, send the user a text message.
 if result == AVAILABLE_MESSAGE:
     send_text(result)
-    send_text(original_message)
+    send_text(slot_info)
